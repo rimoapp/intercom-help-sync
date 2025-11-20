@@ -7,19 +7,19 @@
 In your existing repository:
 
 ```bash
-npm install -D @naoyoshi/intercom-docs-sync
+npm install -D intercom-help-sync
 ```
 
 Or with yarn:
 
 ```bash
-yarn add -D @naoyoshi/intercom-docs-sync
+yarn add -D intercom-help-sync
 ```
 
 ### 2. Initialize help-docs Directory
 
 ```bash
-npx intercom-sync init
+npx intercom-help-sync init
 ```
 
 This creates:
@@ -54,8 +54,8 @@ export INTERCOM_ACCESS_TOKEN=your_access_token_here
 ```json
 {
   "scripts": {
-    "docs:pull": "intercom-sync pull",
-    "docs:push": "intercom-sync push"
+    "docs:pull": "intercom-help-sync pull",
+    "docs:push": "intercom-help-sync push"
   }
 }
 ```
@@ -89,7 +89,7 @@ export INTERCOM_ACCESS_TOKEN=your_access_token_here
 1. AI reads current documentation:
    ```typescript
    import fs from 'fs/promises';
-   
+
    const article = await fs.readFile(
      'help-docs/articles/ja/api/authentication.md',
      'utf-8'
@@ -100,7 +100,7 @@ export INTERCOM_ACCESS_TOKEN=your_access_token_here
    ```typescript
    // AI modifies the content based on code changes
    const updatedContent = aiGenerateDocumentation(codeChanges, article);
-   
+
    await fs.writeFile(
      'help-docs/articles/ja/api/authentication.md',
      updatedContent
@@ -124,9 +124,9 @@ export INTERCOM_ACCESS_TOKEN=your_access_token_here
    status: "published"
    title: "認証"
    ---
-   
+
    # 認証
-   
+
    APIを使用するには認証が必要です...
    ```
 
@@ -138,9 +138,9 @@ export INTERCOM_ACCESS_TOKEN=your_access_token_here
    status: "published"
    title: "Authentication"
    ---
-   
+
    # Authentication
-   
+
    Authentication is required to use the API...
    ```
 
@@ -181,19 +181,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Pull from Intercom
         env:
           INTERCOM_ACCESS_TOKEN: ${{ secrets.INTERCOM_ACCESS_TOKEN }}
-        run: npx intercom-sync pull
-      
+        run: npx intercom-help-sync pull
+
       - name: Commit changes
         run: |
           git config --local user.email "action@github.com"
@@ -209,7 +209,7 @@ jobs:
 ### Custom Config Location
 
 ```bash
-npx intercom-sync pull --config path/to/custom-config.json
+npx intercom-help-sync pull --config path/to/custom-config.json
 ```
 
 ### Multiple Locales
@@ -229,12 +229,12 @@ Update `.intercom-config.json`:
 
 Sync only specific article:
 ```bash
-npx intercom-sync pull --article-id 123456
+npx intercom-help-sync pull --article-id 123456
 ```
 
 Sync only specific file:
 ```bash
-npx intercom-sync push --file help-docs/articles/ja/getting-started/quick-start.md
+npx intercom-help-sync push --file help-docs/articles/ja/getting-started/quick-start.md
 ```
 
 ## Troubleshooting
@@ -295,7 +295,7 @@ Create `.husky/pre-commit`:
 . "$(dirname "$0")/_/husky.sh"
 
 # Pull latest docs before commit
-npx intercom-sync pull --config help-docs/.intercom-config.json
+npx intercom-help-sync pull --config help-docs/.intercom-config.json
 git add help-docs/
 ```
 
@@ -308,5 +308,5 @@ Automatically push documentation updates after merging:
 . "$(dirname "$0")/_/husky.sh"
 
 # Push docs to Intercom after merge
-npx intercom-sync push --config help-docs/.intercom-config.json
+npx intercom-help-sync push --config help-docs/.intercom-config.json
 ```

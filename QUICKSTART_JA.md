@@ -7,7 +7,7 @@
 ### 1. プロジェクトのセットアップ
 
 ```bash
-cd intercom-docs-sync
+cd intercom-help-sync
 npm install
 npm run build
 ```
@@ -18,20 +18,20 @@ npm run build
 
 ```bash
 # パッケージをインストール（将来的にnpmに公開後）
-npm install -D @naoyoshi/intercom-docs-sync
+npm install -D intercom-help-sync
 
 # または、ローカルでリンク
-cd /path/to/intercom-docs-sync
+cd /path/to/intercom-help-sync
 npm link
 
 cd /path/to/your-project
-npm link @naoyoshi/intercom-docs-sync
+npm link intercom-help-sync
 ```
 
 ### 3. help-docsディレクトリを初期化
 
 ```bash
-npx intercom-sync init
+npx intercom-help-sync init
 ```
 
 これにより以下の構造が作成されます：
@@ -60,19 +60,19 @@ INTERCOM_ACCESS_TOKEN=your_access_token_here
 
 **Intercomから取得:**
 ```bash
-npx intercom-sync pull
+npx intercom-help-sync pull
 ```
 
 **ローカルの変更をIntercomに反映:**
 ```bash
-npx intercom-sync push
+npx intercom-help-sync push
 ```
 
 ## 📁 ファイル構造
 
 ### プロジェクト構成
 ```
-intercom-docs-sync/
+intercom-help-sync/
 ├── src/                    # TypeScriptソースコード
 │   ├── sync/              # 同期ロジック
 │   │   ├── intercom-client.ts
@@ -128,14 +128,14 @@ author_id: 12345
 ### CSチームのワークフロー
 
 1. CSチームがIntercom UIで記事を更新
-2. `npx intercom-sync pull` で変更を取得
+2. `npx intercom-help-sync pull` で変更を取得
 3. Gitでバージョン管理
 
 ### AI活用のワークフロー
 
 1. AIがローカルのMarkdownファイルを読み込み
 2. コード変更に応じてAIが内容を更新
-3. `npx intercom-sync push` でIntercomに反映
+3. `npx intercom-help-sync push` でIntercomに反映
 
 ### 翻訳ワークフロー
 
@@ -148,22 +148,22 @@ author_id: 12345
 
 ```bash
 # 全記事を取得
-npx intercom-sync pull
+npx intercom-help-sync pull
 
 # 特定の記事を取得
-npx intercom-sync pull --article-id 123456
+npx intercom-help-sync pull --article-id 123456
 
 # 全記事をプッシュ
-npx intercom-sync push
+npx intercom-help-sync push
 
 # 特定のファイルをプッシュ
-npx intercom-sync push --file articles/ja/getting-started/quick-start.md
+npx intercom-help-sync push --file articles/ja/getting-started/quick-start.md
 
 # help-docsディレクトリを初期化
-npx intercom-sync init
+npx intercom-help-sync init
 
 # カスタム設定ファイルを使用
-npx intercom-sync pull --config path/to/config.json
+npx intercom-help-sync pull --config path/to/config.json
 ```
 
 ## 🔑 Intercomアクセストークンの取得方法

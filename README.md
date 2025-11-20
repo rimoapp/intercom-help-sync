@@ -1,4 +1,4 @@
-# Intercom Docs Sync
+# intercom-help-sync
 
 CLI tool to sync Intercom Help Center articles with local markdown files, enabling AI-powered documentation management and i18n workflows.
 
@@ -13,7 +13,7 @@ CLI tool to sync Intercom Help Center articles with local markdown files, enabli
 ## Installation
 
 ```bash
-npm install -D @naoyoshi/intercom-docs-sync
+npm install -D intercom-help-sync
 ```
 
 ## Quick Start
@@ -21,7 +21,7 @@ npm install -D @naoyoshi/intercom-docs-sync
 ### 1. Initialize directory structure
 
 ```bash
-npx intercom-sync init
+npx intercom-help-sync init
 ```
 
 This creates:
@@ -58,13 +58,13 @@ Or update `.intercom-config.json`:
 Pull all articles from Intercom:
 
 ```bash
-npx intercom-sync pull
+npx intercom-help-sync pull
 ```
 
 Push local changes to Intercom:
 
 ```bash
-npx intercom-sync push
+npx intercom-help-sync push
 ```
 
 ## Usage
@@ -73,29 +73,29 @@ npx intercom-sync push
 
 Pull all articles:
 ```bash
-npx intercom-sync pull
+npx intercom-help-sync pull
 ```
 
 Pull specific article:
 ```bash
-npx intercom-sync pull --article-id 123456
+npx intercom-help-sync pull --article-id 123456
 ```
 
 Use custom config:
 ```bash
-npx intercom-sync pull --config path/to/config.json
+npx intercom-help-sync pull --config path/to/config.json
 ```
 
 ### Push Commands
 
 Push all local articles:
 ```bash
-npx intercom-sync push
+npx intercom-help-sync push
 ```
 
 Push specific file:
 ```bash
-npx intercom-sync push --file articles/ja/getting-started/quick-start.md
+npx intercom-help-sync push --file articles/ja/getting-started/quick-start.md
 ```
 
 ## Article Format
@@ -136,14 +136,14 @@ author_id: 12345
 ### CS Team Workflow
 
 1. CS team updates articles in Intercom UI
-2. Run `npx intercom-sync pull` to sync changes locally
+2. Run `npx intercom-help-sync pull` to sync changes locally
 3. Commit to git for version control
 
 ### AI-Powered Updates
 
 1. AI reads local markdown files
 2. AI modifies content based on code changes
-3. Run `npx intercom-sync push` to update Intercom
+3. Run `npx intercom-help-sync push` to update Intercom
 
 ### i18n Workflow
 

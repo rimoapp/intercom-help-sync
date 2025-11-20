@@ -16,7 +16,7 @@ dotenv.config();
 const program = new Command();
 
 program
-  .name('intercom-sync')
+  .name('intercom-help-sync')
   .description('CLI tool to sync Intercom Help Center articles with local markdown files')
   .version('0.1.0');
 
@@ -43,11 +43,11 @@ program
       if (options.articleId) {
         spinner.text = `Pulling article ${options.articleId}...`;
         const result = await sync.syncById(options.articleId);
-        
+
         spinner.succeed(
           `Sync completed: ${result.created} created, ${result.updated} updated`
         );
-        
+
         if (result.errors.length > 0) {
           console.error(chalk.red('\nErrors:'));
           result.errors.forEach(err => {
@@ -143,9 +143,9 @@ program
     try {
       const { ensureDir } = await import('./utils/file-manager');
       const fs = await import('fs/promises');
-      
+
       const targetDir = path.resolve(process.cwd(), options.dir);
-      
+
       // Create directory structure
       await ensureDir(path.join(targetDir, 'articles', 'ja'));
       await ensureDir(path.join(targetDir, 'articles', 'en'));
@@ -180,29 +180,29 @@ This directory contains synchronized documentation from Intercom Help Center.
 
 2. Pull articles from Intercom:
    \`\`\`bash
-   npx intercom-sync pull
+   npx intercom-help-sync pull
    \`\`\`
 
 ## Usage
 
 ### Pull articles from Intercom
 \`\`\`bash
-npx intercom-sync pull
+npx intercom-help-sync pull
 \`\`\`
 
 ### Push local changes to Intercom
 \`\`\`bash
-npx intercom-sync push
+npx intercom-help-sync push
 \`\`\`
 
 ### Sync specific article
 \`\`\`bash
-npx intercom-sync pull --article-id 123456
+npx intercom-help-sync pull --article-id 123456
 \`\`\`
 
 ### Sync specific file
 \`\`\`bash
-npx intercom-sync push --file articles/ja/getting-started/quick-start.md
+npx intercom-help-sync push --file articles/ja/getting-started/quick-start.md
 \`\`\`
 
 ## Directory Structure
@@ -222,7 +222,7 @@ help-docs/
       spinner.succeed(`Initialized help-docs at ${targetDir}`);
       console.log(chalk.cyan('\nNext steps:'));
       console.log(chalk.cyan('  1. Set INTERCOM_ACCESS_TOKEN environment variable'));
-      console.log(chalk.cyan('  2. Run: npx intercom-sync pull'));
+      console.log(chalk.cyan('  2. Run: npx intercom-help-sync pull'));
     } catch (error) {
       spinner.fail('Initialization failed');
       console.error(chalk.red(error instanceof Error ? error.message : String(error)));

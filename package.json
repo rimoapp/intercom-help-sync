@@ -1,10 +1,10 @@
 {
-  "name": "@naoyoshi/intercom-docs-sync",
+  "name": "intercom-help-sync",
   "version": "0.1.0",
   "description": "CLI tool to sync Intercom Help Center articles with local markdown files",
   "main": "dist/index.js",
   "bin": {
-    "intercom-sync": "dist/cli.js"
+    "intercom-help-sync": "dist/cli.js"
   },
   "scripts": {
     "build": "tsc",
@@ -18,7 +18,11 @@
     "sync",
     "cli"
   ],
-  "author": "Naoyoshi",
+  "author": "Rimo",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rimoapp/intercom-help-sync.git"
+  },
   "license": "MIT",
   "dependencies": {
     "commander": "^11.1.0",
