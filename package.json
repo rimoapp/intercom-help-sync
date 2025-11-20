@@ -1,0 +1,38 @@
+{
+  "name": "@naoyoshi/intercom-docs-sync",
+  "version": "0.1.0",
+  "description": "CLI tool to sync Intercom Help Center articles with local markdown files",
+  "main": "dist/index.js",
+  "bin": {
+    "intercom-sync": "dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "intercom",
+    "help-center",
+    "documentation",
+    "sync",
+    "cli"
+  ],
+  "author": "Naoyoshi",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^11.1.0",
+    "dotenv": "^16.3.1",
+    "gray-matter": "^4.0.3",
+    "axios": "^1.6.2",
+    "chalk": "^4.1.2",
+    "ora": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

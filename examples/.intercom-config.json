@@ -1,0 +1,6 @@
+{
+  "intercomAccessToken": "env:INTERCOM_ACCESS_TOKEN",
+  "articlesDir": "./articles",
+  "defaultLocale": "ja",
+  "supportedLocales": ["ja", "en"]
+}
