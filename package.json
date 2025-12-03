@@ -3,9 +3,14 @@
   "version": "0.1.0",
   "description": "CLI tool to sync Intercom Help Center articles with local markdown files",
   "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "bin": {
     "intercom-help-sync": "dist/cli.js"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
@@ -23,6 +28,10 @@
     "type": "git",
     "url": "git+https://github.com/rimoapp/intercom-help-sync.git"
   },
+  "bugs": {
+    "url": "https://github.com/rimoapp/intercom-help-sync/issues"
+  },
+  "homepage": "https://github.com/rimoapp/intercom-help-sync#readme",
   "license": "MIT",
   "dependencies": {
     "commander": "^11.1.0",
