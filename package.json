@@ -1,6 +1,6 @@
 {
   "name": "intercom-help-sync",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "CLI tool to sync Intercom Help Center articles with local markdown files",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
