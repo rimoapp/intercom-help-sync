@@ -108,6 +108,13 @@ export async function findArticleByIntercomId(
 }
 
 /**
+ * Delete a file
+ */
+export async function deleteArticle(filePath: string): Promise<void> {
+  await fs.unlink(filePath);
+}
+
+/**
  * Load configuration from .intercom-config.json
  */
 export async function loadConfig(configPath: string): Promise<any> {

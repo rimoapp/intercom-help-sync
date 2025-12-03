@@ -1,7 +1,7 @@
 import * as path from 'path';
 import { IntercomClient } from './intercom-client';
 import { IntercomConfig, IntercomArticle, SyncResult, ArticleFrontMatter } from '../types';
-import { writeArticle, findArticleByIntercomId } from '../utils/file-manager';
+import { writeArticle, findArticleByIntercomId, deleteArticle } from '../utils/file-manager';
 import { generateFilePath, timestampToISO, extractTitle } from '../utils/markdown';
 
 export class SyncFromIntercom {
@@ -127,9 +127,14 @@ export class SyncFromIntercom {
 
     // Generate file path
     const collectionId = article.parent_id || 'uncategorized';
-    const slug = title.toLowerCase().replace(/\s+/g, '-');
+    const slug = title.replace(/\s+/g, '-');
     const relativePath = generateFilePath(locale, collectionId, slug);
     const filePath = path.join(this.config.articlesDir, relativePath);
+
+    // Delete old file if title changed (different path)
+    if (existingFile && existingFile !== filePath) {
+      await deleteArticle(existingFile);
+    }
 
     // Prepare front matter
     const frontMatter: ArticleFrontMatter = {
