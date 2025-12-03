@@ -183,4 +183,4 @@ MIT
 
 ## Author
 
-Naoyoshi
+Naoyoshi Aikawa @ Rimo, LLC.
