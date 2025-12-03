@@ -42,11 +42,11 @@ export function generateFilePath(
   slug: string
 ): string {
   const sanitizedSlug = slug
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-  
+    .replace(/[\/\\:*?"<>|]/g, '-')  // ファイル名に使えない文字のみ置換
+    .replace(/\s+/g, '-')             // スペースをハイフンに
+    .replace(/-+/g, '-')              // 連続ハイフンを1つに
+    .replace(/^-|-$/g, '');           // 先頭末尾のハイフンを除去
+
   return `${locale}/${collectionId}/${sanitizedSlug}.md`;
 }
 
