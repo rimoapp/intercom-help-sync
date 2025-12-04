@@ -2,7 +2,8 @@ import * as path from 'path';
 import { IntercomClient } from './intercom-client';
 import { IntercomConfig, IntercomArticle, SyncResult, ArticleFrontMatter } from '../types';
 import { writeArticle, findArticleByIntercomId, deleteArticle } from '../utils/file-manager';
-import { generateFilePath, timestampToISO, stripImageSignatures } from '../utils/markdown';
+import { generateFilePath, timestampToISO } from '../utils/markdown';
+import { htmlToMarkdown } from '../utils/html-to-markdown';
 
 export class SyncFromIntercom {
   private client: IntercomClient;
@@ -164,11 +165,11 @@ export class SyncFromIntercom {
       }
     }
 
-    // Strip image signatures from body for cleaner diffs
-    const cleanBody = stripImageSignatures(body);
+    // Convert HTML to Markdown
+    const markdownBody = htmlToMarkdown(body);
 
     // Write to file
-    await writeArticle(filePath, frontMatter, cleanBody);
+    await writeArticle(filePath, frontMatter, markdownBody);
 
     if (existingFile) {
       result.updated++;
