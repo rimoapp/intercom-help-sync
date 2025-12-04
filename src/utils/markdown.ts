@@ -22,7 +22,24 @@ export function stringifyMarkdown(
   frontMatter: ArticleFrontMatter,
   content: string
 ): string {
-  return matter.stringify(content, frontMatter);
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const yaml = require('js-yaml');
+  const result = matter.stringify(content, frontMatter, {
+    engines: {
+      yaml: {
+        parse: (input: string) => yaml.load(input),
+        stringify: (obj: object) => {
+          return yaml.dump(obj, {
+            quotingType: '"',
+            forceQuotes: false,
+            lineWidth: -1,
+          });
+        },
+      },
+    },
+  });
+  // Ensure newline after front matter
+  return result.replace(/^(---\n[\s\S]*?\n---)\n*/, '$1\n\n');
 }
 
 /**
