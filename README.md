@@ -61,10 +61,10 @@ Pull all articles from Intercom:
 npx intercom-help-sync pull
 ```
 
-Push local changes to Intercom:
+Push a specific file to Intercom:
 
 ```bash
-npx intercom-help-sync push
+npx intercom-help-sync push --file articles/ja/getting-started/quick-start.md
 ```
 
 ## Usage
@@ -88,15 +88,12 @@ npx intercom-help-sync pull --config path/to/config.json
 
 ### Push Commands
 
-Push all local articles:
-```bash
-npx intercom-help-sync push
-```
-
-Push specific file:
+Push a specific file (required):
 ```bash
 npx intercom-help-sync push --file articles/ja/getting-started/quick-start.md
 ```
+
+> **Note**: Push requires a specific file to prevent accidental bulk updates. To push multiple files, run the command for each file individually.
 
 ## Article Format
 
@@ -143,7 +140,7 @@ author_id: 12345
 
 1. AI reads local markdown files
 2. AI modifies content based on code changes
-3. Run `npx intercom-help-sync push` to update Intercom
+3. Run `npx intercom-help-sync push --file <path>` to update Intercom
 
 ### i18n Workflow
 

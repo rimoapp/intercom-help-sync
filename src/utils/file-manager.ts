@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { LocalArticle, ArticleFrontMatter } from '../types';
+import { LocalArticle, ArticleFrontMatter, IntercomConfig } from '../types';
 import { parseMarkdown, stringifyMarkdown } from './markdown';
 
 /**
@@ -117,19 +117,19 @@ export async function deleteArticle(filePath: string): Promise<void> {
 /**
  * Load configuration from .intercom-config.json
  */
-export async function loadConfig(configPath: string): Promise<any> {
+export async function loadConfig(configPath: string): Promise<IntercomConfig> {
   const content = await fs.readFile(configPath, 'utf-8');
-  const config = JSON.parse(content);
-  
+  const config = JSON.parse(content) as IntercomConfig;
+
   // Replace env: prefix with actual environment variable
   if (config.intercomAccessToken?.startsWith('env:')) {
     const envVar = config.intercomAccessToken.slice(4);
-    config.intercomAccessToken = process.env[envVar];
-    
+    config.intercomAccessToken = process.env[envVar] || '';
+
     if (!config.intercomAccessToken) {
-      throw new Error(`Environment variable ${envVar} is not set`);
+      throw new Error(`Environment variable ${envVar} is not set. Set it with: export ${envVar}=your_token`);
     }
   }
-  
+
   return config;
 }

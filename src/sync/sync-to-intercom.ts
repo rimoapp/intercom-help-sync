@@ -2,6 +2,7 @@ import * as path from 'path';
 import { IntercomClient } from './intercom-client';
 import { IntercomConfig, SyncResult, LocalArticle, IntercomArticle } from '../types';
 import { readArticle, getAllMarkdownFiles } from '../utils/file-manager';
+import { markdownToHtml } from '../utils/markdown-to-html';
 
 export class SyncToIntercom {
   private client: IntercomClient;
@@ -130,15 +131,41 @@ export class SyncToIntercom {
       throw new Error('No articles to sync');
     }
 
+    // Fetch current article from Intercom to get image signatures
+    let originalHtml: string | undefined;
+    let originalTranslations: Record<string, string> = {};
+
+    if (intercomId) {
+      try {
+        const currentArticle = await this.client.getArticle(intercomId);
+        originalHtml = currentArticle.body;
+
+        // Get original HTML for each translation
+        if (currentArticle.translated_content) {
+          for (const [locale, translation] of Object.entries(currentArticle.translated_content)) {
+            originalTranslations[locale] = translation.body;
+          }
+        }
+      } catch {
+        // Article might not exist yet, proceed without original HTML
+      }
+    }
+
+    // Convert markdown to HTML for default locale
+    const defaultBody = markdownToHtml(defaultArticle.content, originalHtml);
+
     // Prepare translated content
     const translatedContent: IntercomArticle['translated_content'] = {};
-    
+
     for (const article of articles) {
       if (article.frontMatter.locale !== this.config.defaultLocale) {
-        translatedContent[article.frontMatter.locale] = {
+        const locale = article.frontMatter.locale;
+        const originalTranslationHtml = originalTranslations[locale];
+
+        translatedContent[locale] = {
           type: 'article_content',
           title: article.frontMatter.title || this.extractTitle(article.content),
-          body: article.content,
+          body: markdownToHtml(article.content, originalTranslationHtml),
           author_id: article.frontMatter.author_id || 0,
           state: article.frontMatter.status || 'draft',
           created_at: 0,
@@ -149,7 +176,7 @@ export class SyncToIntercom {
 
     const articleData = {
       title: defaultArticle.frontMatter.title || this.extractTitle(defaultArticle.content),
-      body: defaultArticle.content,
+      body: defaultBody,
       author_id: defaultArticle.frontMatter.author_id || 0,
       state: defaultArticle.frontMatter.status || 'draft' as const,
       parent_id: defaultArticle.frontMatter.intercom_collection_id,
@@ -164,7 +191,7 @@ export class SyncToIntercom {
     } else {
       // Create new article
       const created = await this.client.createArticle(articleData);
-      
+
       // Update all local files with the new intercom_id
       for (const article of articles) {
         article.frontMatter.intercom_id = created.id;
@@ -175,7 +202,7 @@ export class SyncToIntercom {
           article.content
         );
       }
-      
+
       result.created++;
     }
   }

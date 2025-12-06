@@ -18,7 +18,7 @@ const program = new Command();
 program
   .name('intercom-help-sync')
   .description('CLI tool to sync Intercom Help Center articles with local markdown files')
-  .version('0.1.0');
+  .version('0.2.0');
 
 program
   .command('pull')
@@ -78,9 +78,9 @@ program
 
 program
   .command('push')
-  .description('Push local articles to Intercom')
+  .description('Push a local article to Intercom (individual file only)')
   .option('-c, --config <path>', 'Path to config file', 'help-docs/.intercom-config.json')
-  .option('-f, --file <path>', 'Sync only specific file')
+  .requiredOption('-f, --file <path>', 'File to push (required)')
   .action(async (options) => {
     const spinner = ora('Loading configuration...').start();
 
@@ -96,35 +96,19 @@ program
 
       const sync = new SyncToIntercom(config);
 
-      if (options.file) {
-        const filePath = path.resolve(process.cwd(), options.file);
-        spinner.text = `Pushing ${options.file}...`;
-        const result = await sync.syncFile(filePath);
+      const filePath = path.resolve(process.cwd(), options.file);
+      spinner.text = `Pushing ${options.file}...`;
+      const result = await sync.syncFile(filePath);
 
-        spinner.succeed(
-          `Sync completed: ${result.created} created, ${result.updated} updated`
-        );
+      spinner.succeed(
+        `Sync completed: ${result.created} created, ${result.updated} updated`
+      );
 
-        if (result.errors.length > 0) {
-          console.error(chalk.red('\nErrors:'));
-          result.errors.forEach(err => {
-            console.error(chalk.red(`  - ${err.file || err.articleId || 'Unknown'}: ${err.error}`));
-          });
-        }
-      } else {
-        spinner.text = 'Pushing all local articles to Intercom...';
-        const result = await sync.syncAll();
-
-        spinner.succeed(
-          `Sync completed: ${result.created} created, ${result.updated} updated, ${result.skipped} skipped`
-        );
-
-        if (result.errors.length > 0) {
-          console.error(chalk.red(`\n${result.errors.length} errors occurred:`));
-          result.errors.forEach(err => {
-            console.error(chalk.red(`  - ${err.file || err.articleId || 'Unknown'}: ${err.error}`));
-          });
-        }
+      if (result.errors.length > 0) {
+        console.error(chalk.red('\nErrors:'));
+        result.errors.forEach(err => {
+          console.error(chalk.red(`  - ${err.file || err.articleId || 'Unknown'}: ${err.error}`));
+        });
       }
     } catch (error) {
       spinner.fail('Sync failed');
@@ -146,26 +130,43 @@ program
 
       const targetDir = path.resolve(process.cwd(), options.dir);
 
-      // Create directory structure
+      // Helper to check if file exists
+      const fileExists = async (filePath: string): Promise<boolean> => {
+        try {
+          await fs.access(filePath);
+          return true;
+        } catch {
+          return false;
+        }
+      };
+
+      // Create directory structure (always ensures directories exist)
       await ensureDir(path.join(targetDir, 'articles', 'ja'));
       await ensureDir(path.join(targetDir, 'articles', 'en'));
 
-      // Create config file
+      // Create files only if they don't exist
       const configPath = path.join(targetDir, '.intercom-config.json');
-      const configContent = {
-        intercomAccessToken: 'env:INTERCOM_ACCESS_TOKEN',
-        articlesDir: './articles',
-        defaultLocale: 'ja',
-        supportedLocales: ['ja', 'en'],
-      };
+      if (!await fileExists(configPath)) {
+        const configContent = {
+          intercomAccessToken: 'env:INTERCOM_ACCESS_TOKEN',
+          articlesDir: './articles',
+          defaultLocale: 'ja',
+          supportedLocales: ['ja', 'en'],
+        };
 
-      await fs.writeFile(
-        configPath,
-        JSON.stringify(configContent, null, 2),
-        'utf-8'
-      );
+        await fs.writeFile(
+          configPath,
+          JSON.stringify(configContent, null, 2),
+          'utf-8'
+        );
+      }
 
-      // Create README
+      const gitignorePath = path.join(targetDir, '.gitignore');
+      if (!await fileExists(gitignorePath)) {
+        const gitignoreContent = `# Ignore original HTML files (used for preserving image signatures)\n*.original\n`;
+        await fs.writeFile(gitignorePath, gitignoreContent, 'utf-8');
+      }
+
       const readmePath = path.join(targetDir, 'README.md');
       const readmeContent = `# Help Documentation
 
@@ -190,19 +191,14 @@ This directory contains synchronized documentation from Intercom Help Center.
 npx intercom-help-sync pull
 \`\`\`
 
-### Push local changes to Intercom
-\`\`\`bash
-npx intercom-help-sync push
-\`\`\`
-
-### Sync specific article
-\`\`\`bash
-npx intercom-help-sync pull --article-id 123456
-\`\`\`
-
-### Sync specific file
+### Push a specific file to Intercom
 \`\`\`bash
 npx intercom-help-sync push --file articles/ja/getting-started/quick-start.md
+\`\`\`
+
+### Pull specific article
+\`\`\`bash
+npx intercom-help-sync pull --article-id 123456
 \`\`\`
 
 ## Directory Structure
@@ -217,7 +213,9 @@ help-docs/
 \`\`\`
 `;
 
-      await fs.writeFile(readmePath, readmeContent, 'utf-8');
+      if (!await fileExists(readmePath)) {
+        await fs.writeFile(readmePath, readmeContent, 'utf-8');
+      }
 
       spinner.succeed(`Initialized help-docs at ${targetDir}`);
       console.log(chalk.cyan('\nNext steps:'));

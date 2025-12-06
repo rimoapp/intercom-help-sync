@@ -22,7 +22,7 @@ const CALLOUT_STYLES: Record<string, { bg: string; border: string }> = {
 export function markdownToHtml(markdown: string, originalHtml?: string): string {
   let result = markdown;
 
-  // Process in reverse order of html-to-markdown (less specific first)
+  // Process block-level elements first, then inline elements
 
   // 1. Handle callouts (```callout-color)
   result = convertCalloutBlocks(result);
@@ -42,14 +42,15 @@ export function markdownToHtml(markdown: string, originalHtml?: string): string 
   // 6. Handle lists
   result = convertListsToHtml(result);
 
-  // 7. Handle links
+  // 7. Handle paragraphs BEFORE inline formatting
+  // so that plain text lines get wrapped in <p> tags first
+  result = convertParagraphsToHtml(result);
+
+  // 8. Handle links (do before inline formatting to preserve link structure)
   result = convertLinksToHtml(result);
 
-  // 8. Handle inline formatting
+  // 9. Handle inline formatting
   result = convertInlineFormattingToHtml(result);
-
-  // 9. Handle paragraphs
-  result = convertParagraphsToHtml(result);
 
   // 10. Handle line breaks
   result = result.replace(/  \n/g, '<br>');
@@ -200,15 +201,17 @@ function convertInlineFormattingToHtml(markdown: string): string {
  * Convert paragraphs to HTML
  */
 function convertParagraphsToHtml(markdown: string): string {
-  const lines = markdown.split('\n\n');
+  const lines = markdown.split('\n');
   const result: string[] = [];
 
-  for (const block of lines) {
-    const trimmed = block.trim();
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Skip empty lines
     if (!trimmed) continue;
 
-    // Skip if already HTML
-    if (trimmed.startsWith('<')) {
+    // Skip if already HTML tag (starts with < but not a comment)
+    if (trimmed.startsWith('<') && !trimmed.startsWith('<!--')) {
       result.push(trimmed);
       continue;
     }
@@ -219,7 +222,7 @@ function convertParagraphsToHtml(markdown: string): string {
       const [, align, content] = alignMatch;
       result.push(`<p class="intercom-align-${align} no-margin">${content.trim()}</p>`);
     } else {
-      // Regular paragraph
+      // Regular paragraph - wrap plain text in p tags
       result.push(`<p class="no-margin">${trimmed}</p>`);
     }
   }
