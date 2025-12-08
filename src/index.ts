@@ -5,7 +5,7 @@
 
 // Sync classes
 export { SyncFromIntercom } from './sync/sync-from-intercom';
-export { SyncToIntercom } from './sync/sync-to-intercom';
+export { SyncToIntercom, type DryRunResult } from './sync/sync-to-intercom';
 export { IntercomClient } from './sync/intercom-client';
 
 // Utilities

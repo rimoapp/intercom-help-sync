@@ -184,8 +184,9 @@ Note: Callouts must be explicitly specified with `callout-{color}`. A bare ` ```
 
 ### 11. Tables
 
-Tables are wrapped in `intercom-interblocks-table-container`. Keep as HTML in Markdown:
+Tables are converted to standard Markdown table syntax:
 
+HTML:
 ```html
 <div class="intercom-interblocks-table-container"><table role="presentation"><tbody>
   <tr><td><p class="no-margin">1-1</p></td><td><p class="no-margin">1-2</p></td></tr>
@@ -193,12 +194,14 @@ Tables are wrapped in `intercom-interblocks-table-container`. Keep as HTML in Ma
 </tbody></table></div>
 ```
 
-Alternatively, simple tables can use Markdown syntax (converted to HTML on push):
+Markdown:
 ```markdown
-| Column 1 | Column 2 |
-|----------|----------|
-| Cell 1   | Cell 2   |
+| 1-1 | 1-2 |
+| --- | --- |
+| 2-1 | 2-2 |
 ```
+
+The first row is treated as the header row. On push, Markdown tables are converted back to Intercom's HTML table format.
 
 ### 12. Collapsible Sections (Accordion)
 
@@ -286,7 +289,7 @@ This approach:
 | Buttons | Raw HTML | |
 | Callouts | Via fence | `callout-{color}` |
 | Code blocks | Full | Standard Markdown |
-| Tables | Raw HTML / Markdown | |
+| Tables | Full | Standard Markdown tables |
 | Collapsible | Raw HTML | With nesting |
 | Horizontal rule | Full | `---` |
 | Attachments | Via front matter | Stored in metadata |

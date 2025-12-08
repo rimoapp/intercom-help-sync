@@ -4,6 +4,19 @@ import { IntercomConfig, SyncResult, LocalArticle, IntercomArticle } from '../ty
 import { readArticle, getAllMarkdownFiles } from '../utils/file-manager';
 import { markdownToHtml } from '../utils/markdown-to-html';
 
+export interface DryRunResult {
+  title: string;
+  intercomId?: string;
+  isNew: boolean;
+  currentHtml?: string;
+  newHtml: string;
+  translations: {
+    locale: string;
+    currentHtml?: string;
+    newHtml: string;
+  }[];
+}
+
 export class SyncToIntercom {
   private client: IntercomClient;
   private config: IntercomConfig;
@@ -82,25 +95,11 @@ export class SyncToIntercom {
     };
 
     try {
-      const article = await readArticle(filePath);
-      
-      // Find related translations
-      const relatedArticles = [article];
-      if (article.frontMatter.translations) {
-        for (const translationPath of Object.values(article.frontMatter.translations)) {
-          const fullPath = path.join(this.config.articlesDir, translationPath);
-          try {
-            const translatedArticle = await readArticle(fullPath);
-            relatedArticles.push(translatedArticle);
-          } catch {
-            // Translation file might not exist yet
-          }
-        }
-      }
+      const { articles } = await this.prepareArticles(filePath);
 
       await this.syncArticleGroup(
-        article.frontMatter.intercom_id,
-        relatedArticles,
+        articles[0].frontMatter.intercom_id,
+        articles,
         result
       );
     } catch (error) {
@@ -112,6 +111,89 @@ export class SyncToIntercom {
     }
 
     return result;
+  }
+
+  /**
+   * Dry run: show diff between local and remote without pushing
+   */
+  async dryRun(filePath: string): Promise<DryRunResult> {
+    const { articles, defaultArticle } = await this.prepareArticles(filePath);
+    const intercomId = defaultArticle.frontMatter.intercom_id;
+
+    // Fetch current article from Intercom
+    let currentHtml: string | undefined;
+    let currentTranslations: Record<string, string> = {};
+
+    if (intercomId) {
+      try {
+        const currentArticle = await this.client.getArticle(intercomId);
+        currentHtml = currentArticle.body;
+
+        if (currentArticle.translated_content) {
+          for (const [locale, translation] of Object.entries(currentArticle.translated_content)) {
+            currentTranslations[locale] = translation.body;
+          }
+        }
+      } catch {
+        // Article might not exist
+      }
+    }
+
+    // Convert markdown to HTML
+    const newHtml = markdownToHtml(defaultArticle.content, currentHtml);
+
+    // Process translations
+    const translations: DryRunResult['translations'] = [];
+    for (const article of articles) {
+      if (article.frontMatter.locale !== this.config.defaultLocale) {
+        const locale = article.frontMatter.locale;
+        translations.push({
+          locale,
+          currentHtml: currentTranslations[locale],
+          newHtml: markdownToHtml(article.content, currentTranslations[locale]),
+        });
+      }
+    }
+
+    return {
+      title: defaultArticle.frontMatter.title || this.extractTitle(defaultArticle.content),
+      intercomId,
+      isNew: !intercomId,
+      currentHtml,
+      newHtml,
+      translations,
+    };
+  }
+
+  /**
+   * Prepare articles for sync (shared between syncFile and dryRun)
+   */
+  private async prepareArticles(filePath: string): Promise<{
+    articles: LocalArticle[];
+    defaultArticle: LocalArticle;
+  }> {
+    const article = await readArticle(filePath);
+
+    // Find related translations
+    const articles = [article];
+    if (article.frontMatter.translations) {
+      for (const translationPath of Object.values(article.frontMatter.translations)) {
+        const fullPath = path.join(this.config.articlesDir, translationPath);
+        try {
+          const translatedArticle = await readArticle(fullPath);
+          articles.push(translatedArticle);
+        } catch {
+          // Translation file might not exist yet
+        }
+      }
+    }
+
+    // Find default locale article
+    const defaultArticle = articles.find(
+      a => a.frontMatter.locale === this.config.defaultLocale
+    ) || articles[0];
+
+    return { articles, defaultArticle };
   }
 
   /**

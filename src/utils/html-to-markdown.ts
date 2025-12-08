@@ -35,8 +35,8 @@ export function htmlToMarkdown(html: string): string {
   // 3. Handle buttons (keep as raw HTML)
   // Already raw HTML, no conversion needed
 
-  // 4. Handle tables (keep as raw HTML)
-  // Already raw HTML, no conversion needed
+  // 4. Handle tables - convert to Markdown tables
+  result = convertTables(result);
 
   // 5. Handle callouts - convert to fenced code blocks
   result = convertCallouts(result);
@@ -72,6 +72,67 @@ export function htmlToMarkdown(html: string): string {
   result = cleanupWhitespace(result);
 
   return result.trim();
+}
+
+/**
+ * Convert HTML tables to Markdown tables
+ */
+function convertTables(html: string): string {
+  const tableRegex = /<div\s+class="intercom-interblocks-table-container"[^>]*>\s*<table[^>]*>\s*<tbody>([\s\S]*?)<\/tbody>\s*<\/table>\s*<\/div>/gi;
+
+  return html.replace(tableRegex, (match, tbodyContent) => {
+    const rows: string[][] = [];
+
+    // Extract rows
+    const rowRegex = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+    let rowMatch;
+
+    while ((rowMatch = rowRegex.exec(tbodyContent)) !== null) {
+      const cells: string[] = [];
+      const cellRegex = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+      let cellMatch;
+
+      while ((cellMatch = cellRegex.exec(rowMatch[1])) !== null) {
+        let cellContent = cellMatch[1];
+        // Remove p tags and clean up
+        cellContent = cellContent.replace(/<p[^>]*>([\s\S]*?)<\/p>/gi, '$1');
+        cellContent = cellContent.trim();
+        // Convert inline formatting
+        cellContent = convertInlineFormatting(cellContent);
+        cells.push(cellContent);
+      }
+
+      if (cells.length > 0) {
+        rows.push(cells);
+      }
+    }
+
+    if (rows.length === 0) {
+      return match; // Return original if no rows found
+    }
+
+    // Determine column count
+    const colCount = Math.max(...rows.map(row => row.length));
+
+    // Build Markdown table
+    const lines: string[] = [];
+
+    // First row as header
+    const headerRow = rows[0] || [];
+    const headerCells = Array(colCount).fill('').map((_, i) => headerRow[i] || '');
+    lines.push('| ' + headerCells.join(' | ') + ' |');
+
+    // Separator row
+    lines.push('| ' + Array(colCount).fill('---').join(' | ') + ' |');
+
+    // Data rows
+    for (let i = 1; i < rows.length; i++) {
+      const dataCells = Array(colCount).fill('').map((_, j) => rows[i][j] || '');
+      lines.push('| ' + dataCells.join(' | ') + ' |');
+    }
+
+    return '\n\n' + lines.join('\n') + '\n\n';
+  });
 }
 
 /**

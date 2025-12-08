@@ -14,6 +14,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
+    "test": "npx ts-node tests/conversion.test.ts",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -44,6 +45,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },
   "engines": {

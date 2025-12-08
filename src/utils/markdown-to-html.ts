@@ -36,29 +36,32 @@ export function markdownToHtml(markdown: string, originalHtml?: string): string 
   // 4. Handle images with alignment
   result = convertImagesToHtml(result);
 
-  // 5. Handle horizontal rules
+  // 5. Handle tables
+  result = convertTablesToHtml(result);
+
+  // 6. Handle horizontal rules
   result = result.replace(/^---$/gm, '<hr>');
 
-  // 6. Handle lists
+  // 7. Handle lists
   result = convertListsToHtml(result);
 
-  // 7. Handle paragraphs BEFORE inline formatting
+  // 8. Handle paragraphs BEFORE inline formatting
   // so that plain text lines get wrapped in <p> tags first
   result = convertParagraphsToHtml(result);
 
-  // 8. Handle links (do before inline formatting to preserve link structure)
+  // 9. Handle links (do before inline formatting to preserve link structure)
   result = convertLinksToHtml(result);
 
-  // 9. Handle inline formatting
+  // 10. Handle inline formatting
   result = convertInlineFormattingToHtml(result);
 
-  // 10. Handle line breaks
+  // 11. Handle line breaks
   result = result.replace(/  \n/g, '<br>');
 
-  // 11. Clean up
+  // 12. Clean up
   result = cleanupHtml(result);
 
-  // 12. Restore image signatures if original HTML provided
+  // 13. Restore image signatures if original HTML provided
   if (originalHtml) {
     result = restoreImageSignatures(result, originalHtml);
   }
@@ -118,6 +121,57 @@ function convertHeadingsToHtml(markdown: string): string {
   }
 
   return markdown;
+}
+
+/**
+ * Convert Markdown tables to Intercom HTML tables
+ */
+function convertTablesToHtml(markdown: string): string {
+  // Match markdown tables (header row, separator row, optional data rows)
+  // Use [ \t]* instead of \s* to avoid matching newlines
+  // Allow last row to not have trailing newline
+  const tableRegex = /^\|(.+)\|[ \t]*\n\|[\s\-:|]+\|[ \t]*(?:\n|$)((?:\|.+\|[ \t]*(?:\n|$))*)/gm;
+
+  return markdown.replace(tableRegex, (match, headerRow, bodyRows) => {
+    // Parse header cells
+    const headerCells = headerRow.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell);
+
+    // Parse body rows
+    const rows: string[][] = [];
+    if (bodyRows && bodyRows.trim()) {
+      const bodyLines = bodyRows.trim().split('\n');
+      for (const line of bodyLines) {
+        const cells = line.split('|').map((cell: string) => cell.trim()).filter((cell: string) => cell);
+        if (cells.length > 0) {
+          rows.push(cells);
+        }
+      }
+    }
+
+    // Build HTML table
+    let html = '<div class="intercom-interblocks-table-container"><table role="presentation"><tbody>';
+
+    // Header row
+    html += '<tr>';
+    for (const cell of headerCells) {
+      html += `<td><p class="no-margin">${cell}</p></td>`;
+    }
+    html += '</tr>';
+
+    // Data rows
+    for (const row of rows) {
+      html += '<tr>';
+      for (let i = 0; i < headerCells.length; i++) {
+        const cell = row[i] || '';
+        html += `<td><p class="no-margin">${cell}</p></td>`;
+      }
+      html += '</tr>';
+    }
+
+    html += '</tbody></table></div>';
+
+    return html;
+  });
 }
 
 /**
