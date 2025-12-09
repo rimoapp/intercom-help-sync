@@ -18,7 +18,7 @@ const program = new Command();
 program
   .name('intercom-help-sync')
   .description('CLI tool to sync Intercom Help Center articles with local markdown files')
-  .version('0.2.0');
+  .version('0.3.0');
 
 program
   .command('pull')
