@@ -80,8 +80,9 @@ export function timestampToISO(timestamp: number): string {
  */
 export function stripImageSignatures(html: string): string {
   // Match Intercom CDN URLs and remove expires, signature, req parameters
+  // Pattern matches: domain + path (no query) + query string
   return html.replace(
-    /(https:\/\/(?:downloads\.intercomcdn\.com|[a-z0-9-]+\.intercom-attachments[^"'\s]*?))\?[^"'\s]*/g,
+    /(https:\/\/(?:downloads\.intercomcdn\.com|[a-z0-9-]+\.intercom-attachments[a-z0-9.-]*)[^"'\s?]*)\?[^"'\s]*/g,
     (match, baseUrl) => {
       // Parse the URL and keep only non-signature parameters
       try {
@@ -107,7 +108,7 @@ export function stripImageSignatures(html: string): string {
 export function restoreImageSignatures(html: string, originalHtml: string): string {
   // Build a map of base URL -> full signed URL from original
   const signedUrls = new Map<string, string>();
-  const urlRegex = /(https:\/\/(?:downloads\.intercomcdn\.com|[a-z0-9-]+\.intercom-attachments[^"'\s]*?)\?[^"'\s]*)/g;
+  const urlRegex = /(https:\/\/(?:downloads\.intercomcdn\.com|[a-z0-9-]+\.intercom-attachments[a-z0-9.-]*)[^"'\s?]*\?[^"'\s]*)/g;
 
   let match;
   while ((match = urlRegex.exec(originalHtml)) !== null) {
@@ -127,7 +128,7 @@ export function restoreImageSignatures(html: string, originalHtml: string): stri
 
   // Replace base URLs in html with signed versions
   return html.replace(
-    /(https:\/\/(?:downloads\.intercomcdn\.com|[a-z0-9-]+\.intercom-attachments[^"'\s]*?))(?:\?[^"'\s]*)?/g,
+    /(https:\/\/(?:downloads\.intercomcdn\.com|[a-z0-9-]+\.intercom-attachments[a-z0-9.-]*)[^"'\s?]*)(?:\?[^"'\s]*)?/g,
     (match) => {
       try {
         const url = new URL(match);
