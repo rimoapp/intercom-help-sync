@@ -8,6 +8,7 @@
 
 import { htmlToMarkdown } from '../src/utils/html-to-markdown';
 import { markdownToHtml } from '../src/utils/markdown-to-html';
+import { stripImageSignatures, restoreImageSignatures } from '../src/utils/markdown';
 
 /**
  * Normalize HTML for comparison
@@ -124,6 +125,56 @@ const testCases: { name: string; html: string }[] = [
 // These elements are kept as raw HTML per design and have known roundtrip limitations
 const combinedDocumentHtml = `<h1 id="h_e324f0a1dd">H1</h1><h2 id="h_b3ae805d42">Heading 2</h2><h3 id="h_03290146c3">Heading 3</h3><h4 id="h_9624ce3e6b">Heading 4</h4><p class="no-margin">normal text</p><p class="no-margin"><b>bold</b></p><p class="no-margin"><i>italic</i></p><p class="no-margin"><b><i>bold_italic</i></b></p><p class="no-margin"><code>inline code</code></p><p class="no-margin"><a href="https://example.com/link" target="_blank" class="intercom-content-link">link text</a></p><p class="intercom-align-center no-margin">centered text</p><p class="intercom-align-right no-margin">right aligned</p><div class="intercom-container"><img src="https://example.com/image.png"></div><div class="intercom-interblocks-table-container"><table role="presentation"><tbody><tr><td><p class="no-margin">A1</p></td><td><p class="no-margin">B1</p></td></tr><tr><td><p class="no-margin">A2</p></td><td><p class="no-margin">B2</p></td></tr></tbody></table></div><hr><ul><li><p class="no-margin">list item 1</p></li><li><p class="no-margin">list item 2</p></li></ul><ol><li><p class="no-margin">step 1</p></li><li><p class="no-margin">step 2</p></li></ol><pre><code>code block</code></pre><div class="intercom-interblocks-callout" style="background-color: #e8e8e880; border-color: #73737633;"><p class="no-margin">gray callout</p></div><div class="intercom-interblocks-callout" style="background-color: #e3e7fa80; border-color: #334bfa33;"><p class="no-margin">blue callout</p></div>`;
 
+/**
+ * Test image signature stripping and restoration
+ */
+function testImageSignatures(): { pass: boolean; message: string }[] {
+  const results: { pass: boolean; message: string }[] = [];
+
+  // Test 1: Strip signatures from downloads.intercomcdn.com URL
+  const signedUrl = 'https://downloads.intercomcdn.com/i/o/925550781/4ee52b3c7f4d2e7215a10b40/image.png?expires=1765159200&signature=753b2c3654455900fc93a8c7f617800bbc0deea9f97bf81c9efef02825060356&req=fSIiE8x%2BmoleFb4f3HP0gNbv081s36DxgbceLLu06bqHDYgKxuHuy7DGFi2b%0AT4k%3D%0A';
+  const htmlWithSignedUrl = `<img src="${signedUrl}">`;
+  const expectedStripped = '<img src="https://downloads.intercomcdn.com/i/o/925550781/4ee52b3c7f4d2e7215a10b40/image.png">';
+
+  const stripped = stripImageSignatures(htmlWithSignedUrl);
+  if (stripped === expectedStripped) {
+    results.push({ pass: true, message: '✓ Strip image signatures' });
+  } else {
+    results.push({
+      pass: false,
+      message: `✗ Strip image signatures\n  Expected: ${expectedStripped}\n  Got: ${stripped}`,
+    });
+  }
+
+  // Test 2: Restore signatures
+  const restored = restoreImageSignatures(stripped, htmlWithSignedUrl);
+  if (restored === htmlWithSignedUrl) {
+    results.push({ pass: true, message: '✓ Restore image signatures' });
+  } else {
+    results.push({
+      pass: false,
+      message: `✗ Restore image signatures\n  Expected: ${htmlWithSignedUrl}\n  Got: ${restored}`,
+    });
+  }
+
+  // Test 3: Strip signatures from intercom-attachments URL
+  const attachmentUrl = 'https://intercom-attachments-1.com/path/to/file.pdf?expires=123&signature=abc&req=xyz';
+  const htmlWithAttachment = `<a href="${attachmentUrl}">file</a>`;
+  const strippedAttachment = stripImageSignatures(htmlWithAttachment);
+  const expectedAttachmentStripped = '<a href="https://intercom-attachments-1.com/path/to/file.pdf">file</a>';
+
+  if (strippedAttachment === expectedAttachmentStripped) {
+    results.push({ pass: true, message: '✓ Strip attachment signatures' });
+  } else {
+    results.push({
+      pass: false,
+      message: `✗ Strip attachment signatures\n  Expected: ${expectedAttachmentStripped}\n  Got: ${strippedAttachment}`,
+    });
+  }
+
+  return results;
+}
+
 // Run tests
 function runTests(): void {
   console.log('Running HTML roundtrip tests...\n');
@@ -155,6 +206,20 @@ function runTests(): void {
     failed++;
     failures.push(fullDocResult.message);
     console.log(fullDocResult.message);
+  }
+
+  // Run image signature tests
+  console.log('\nRunning image signature tests...');
+  const signatureResults = testImageSignatures();
+  for (const result of signatureResults) {
+    if (result.pass) {
+      passed++;
+      console.log(result.message);
+    } else {
+      failed++;
+      failures.push(result.message);
+      console.log(result.message);
+    }
   }
 
   // Summary
