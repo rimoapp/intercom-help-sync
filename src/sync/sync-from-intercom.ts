@@ -82,12 +82,12 @@ export class SyncFromIntercom {
     article: IntercomArticle,
     result: SyncResult
   ): Promise<void> {
-    // Sync default locale
+    // Sync default locale (pass empty string if title/body are undefined)
     await this.syncArticleLocale(
       article,
       article.default_locale,
-      article.title,
-      article.body,
+      article.title || '',
+      article.body || '',
       article,
       result
     );
@@ -95,13 +95,17 @@ export class SyncFromIntercom {
     // Sync translated content
     if (article.translated_content) {
       for (const [locale, translation] of Object.entries(article.translated_content)) {
+        // Skip translations where both title and body are empty (not started)
+        if (!translation.title && !translation.body) {
+          continue;
+        }
         // Sync all translations, or filter by supportedLocales if specified
         if (!this.config.supportedLocales || this.config.supportedLocales.includes(locale)) {
           await this.syncArticleLocale(
             article,
             locale,
-            translation.title,
-            translation.body,
+            translation.title || '',
+            translation.body || '',
             article,
             result
           );
@@ -129,7 +133,10 @@ export class SyncFromIntercom {
 
     // Generate file path
     const collectionId = article.parent_id || 'uncategorized';
-    const slug = title.replace(/\s+/g, '-');
+    // Use title for slug, or fallback to article ID if title is empty
+    const slug = title
+      ? title.replace(/\s+/g, '-')
+      : `article-${article.id}`;
     const relativePath = generateFilePath(locale, collectionId, slug);
     const filePath = path.join(this.config.articlesDir, relativePath);
 
@@ -155,9 +162,15 @@ export class SyncFromIntercom {
       for (const translationLocale of Object.keys(baseArticle.translated_content)) {
         // Include all translations, or filter by supportedLocales if specified
         if (!this.config.supportedLocales || this.config.supportedLocales.includes(translationLocale)) {
-          const translationSlug = baseArticle.translated_content[translationLocale].title
-            .toLowerCase()
-            .replace(/\s+/g, '-');
+          const translation = baseArticle.translated_content[translationLocale];
+          // Skip translations where both title and body are empty (not started)
+          if (!translation.title && !translation.body) {
+            continue;
+          }
+          // Use title for slug, or fallback to article ID if title is empty
+          const translationSlug = translation.title
+            ? translation.title.toLowerCase().replace(/\s+/g, '-')
+            : `article-${baseArticle.id}`;
           frontMatter.translations[translationLocale] = generateFilePath(
             translationLocale,
             collectionId,

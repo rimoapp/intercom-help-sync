@@ -19,6 +19,11 @@ const CALLOUT_COLORS: Record<string, string> = {
  * Convert Intercom HTML to Markdown
  */
 export function htmlToMarkdown(html: string): string {
+  // Handle empty/undefined input
+  if (!html) {
+    return '';
+  }
+
   let result = html;
 
   // Strip image signatures first
