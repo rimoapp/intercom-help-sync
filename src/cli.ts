@@ -23,20 +23,27 @@ program
 program
   .command('pull')
   .description('Pull articles from Intercom to local files')
-  .option('-c, --config <path>', 'Path to config file', 'help-docs/.intercom-config.json')
+  .option('-c, --config <path>', 'Path to config file (optional)')
   .option('-a, --article-id <id>', 'Sync only specific article by ID')
   .action(async (options) => {
     const spinner = ora('Loading configuration...').start();
 
     try {
-      const configPath = path.resolve(process.cwd(), options.config);
-      const config: IntercomConfig = await loadConfig(configPath);
+      // Try to find config file
+      const configPath = options.config
+        ? path.resolve(process.cwd(), options.config)
+        : path.resolve(process.cwd(), 'help-docs/.intercom-config.json');
+      const basePath = path.resolve(process.cwd(), 'help-docs');
 
-      // Convert relative path to absolute
-      config.articlesDir = path.resolve(
-        path.dirname(configPath),
-        config.articlesDir
-      );
+      const config: IntercomConfig = await loadConfig(configPath, basePath);
+
+      // Convert relative path to absolute if config file exists
+      if (options.config || await import('fs/promises').then(fs => fs.access(configPath).then(() => true).catch(() => false))) {
+        config.articlesDir = path.resolve(
+          path.dirname(configPath),
+          config.articlesDir
+        );
+      }
 
       const sync = new SyncFromIntercom(config);
 
@@ -80,20 +87,27 @@ program
   .command('push')
   .description('Push local articles to Intercom')
   .argument('<files...>', 'Files to push')
-  .option('-c, --config <path>', 'Path to config file', 'help-docs/.intercom-config.json')
+  .option('-c, --config <path>', 'Path to config file (optional)')
   .option('-n, --dry-run', 'Show diff without pushing')
   .action(async (files: string[], options) => {
     const spinner = ora('Loading configuration...').start();
 
     try {
-      const configPath = path.resolve(process.cwd(), options.config);
-      const config: IntercomConfig = await loadConfig(configPath);
+      // Try to find config file
+      const configPath = options.config
+        ? path.resolve(process.cwd(), options.config)
+        : path.resolve(process.cwd(), 'help-docs/.intercom-config.json');
+      const basePath = path.resolve(process.cwd(), 'help-docs');
 
-      // Convert relative path to absolute
-      config.articlesDir = path.resolve(
-        path.dirname(configPath),
-        config.articlesDir
-      );
+      const config: IntercomConfig = await loadConfig(configPath, basePath);
+
+      // Convert relative path to absolute if config file exists
+      if (options.config || await import('fs/promises').then(fs => fs.access(configPath).then(() => true).catch(() => false))) {
+        config.articlesDir = path.resolve(
+          path.dirname(configPath),
+          config.articlesDir
+        );
+      }
 
       const sync = new SyncToIntercom(config);
 
@@ -241,121 +255,5 @@ function showDiff(oldHtml: string, newHtml: string): void {
 
   console.log();
 }
-
-program
-  .command('init')
-  .description('Initialize help-docs directory structure')
-  .option('-d, --dir <path>', 'Target directory', 'help-docs')
-  .action(async (options) => {
-    const spinner = ora('Initializing help-docs...').start();
-
-    try {
-      const { ensureDir } = await import('./utils/file-manager');
-      const fs = await import('fs/promises');
-
-      const targetDir = path.resolve(process.cwd(), options.dir);
-
-      // Helper to check if file exists
-      const fileExists = async (filePath: string): Promise<boolean> => {
-        try {
-          await fs.access(filePath);
-          return true;
-        } catch {
-          return false;
-        }
-      };
-
-      // Create directory structure (always ensures directories exist)
-      await ensureDir(path.join(targetDir, 'articles', 'ja'));
-      await ensureDir(path.join(targetDir, 'articles', 'en'));
-
-      // Create files only if they don't exist
-      const configPath = path.join(targetDir, '.intercom-config.json');
-      if (!await fileExists(configPath)) {
-        const configContent = {
-          intercomAccessToken: 'env:INTERCOM_ACCESS_TOKEN',
-          articlesDir: './articles',
-          defaultLocale: 'ja',
-          supportedLocales: ['ja', 'en'],
-        };
-
-        await fs.writeFile(
-          configPath,
-          JSON.stringify(configContent, null, 2),
-          'utf-8'
-        );
-      }
-
-      const gitignorePath = path.join(targetDir, '.gitignore');
-      if (!await fileExists(gitignorePath)) {
-        const gitignoreContent = `# Ignore original HTML files (used for preserving image signatures)\n*.original\n`;
-        await fs.writeFile(gitignorePath, gitignoreContent, 'utf-8');
-      }
-
-      const readmePath = path.join(targetDir, 'README.md');
-      const readmeContent = `# Help Documentation
-
-This directory contains synchronized documentation from Intercom Help Center.
-
-## Setup
-
-1. Set your Intercom access token:
-   \`\`\`bash
-   export INTERCOM_ACCESS_TOKEN=your_token_here
-   \`\`\`
-
-2. Pull articles from Intercom:
-   \`\`\`bash
-   npx intercom-help-sync pull
-   \`\`\`
-
-## Usage
-
-### Pull articles from Intercom
-\`\`\`bash
-npx intercom-help-sync pull
-\`\`\`
-
-### Push files to Intercom
-\`\`\`bash
-npx intercom-help-sync push articles/ja/getting-started/quick-start.md
-\`\`\`
-
-### Push with dry run (preview changes)
-\`\`\`bash
-npx intercom-help-sync push articles/ja/quick-start.md --dry-run
-\`\`\`
-
-### Pull specific article
-\`\`\`bash
-npx intercom-help-sync pull --article-id 123456
-\`\`\`
-
-## Directory Structure
-
-\`\`\`
-help-docs/
-├── articles/
-│   ├── ja/          # Japanese articles
-│   └── en/          # English articles
-├── .intercom-config.json
-└── README.md
-\`\`\`
-`;
-
-      if (!await fileExists(readmePath)) {
-        await fs.writeFile(readmePath, readmeContent, 'utf-8');
-      }
-
-      spinner.succeed(`Initialized help-docs at ${targetDir}`);
-      console.log(chalk.cyan('\nNext steps:'));
-      console.log(chalk.cyan('  1. Set INTERCOM_ACCESS_TOKEN environment variable'));
-      console.log(chalk.cyan('  2. Run: npx intercom-help-sync pull'));
-    } catch (error) {
-      spinner.fail('Initialization failed');
-      console.error(chalk.red(error instanceof Error ? error.message : String(error)));
-      process.exit(1);
-    }
-  });
 
 program.parse();

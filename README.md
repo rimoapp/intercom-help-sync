@@ -18,42 +18,13 @@ npm install -D intercom-help-sync
 
 ## Quick Start
 
-### 1. Initialize directory structure
-
-```bash
-npx intercom-help-sync init
-```
-
-This creates:
-```
-help-docs/
-├── articles/
-│   ├── ja/
-│   └── en/
-├── .intercom-config.json
-└── README.md
-```
-
-### 2. Configure
-
-Set your Intercom access token:
+### 1. Set your Intercom access token
 
 ```bash
 export INTERCOM_ACCESS_TOKEN=your_access_token_here
 ```
 
-Or update `.intercom-config.json`:
-
-```json
-{
-  "intercomAccessToken": "env:INTERCOM_ACCESS_TOKEN",
-  "articlesDir": "./articles",
-  "defaultLocale": "ja",
-  "supportedLocales": ["ja", "en"]
-}
-```
-
-### 3. Sync articles
+### 2. Sync articles
 
 Pull all articles from Intercom:
 
@@ -64,7 +35,7 @@ npx intercom-help-sync pull
 Push a file to Intercom:
 
 ```bash
-npx intercom-help-sync push articles/ja/getting-started/quick-start.md
+npx intercom-help-sync push help-docs/ja/getting-started/quick-start.md
 ```
 
 ## Usage
@@ -90,17 +61,17 @@ npx intercom-help-sync pull --config path/to/config.json
 
 Push a single file:
 ```bash
-npx intercom-help-sync push articles/ja/getting-started/quick-start.md
+npx intercom-help-sync push help-docs/ja/getting-started/quick-start.md
 ```
 
 Push multiple files:
 ```bash
-npx intercom-help-sync push articles/ja/file1.md articles/ja/file2.md
+npx intercom-help-sync push help-docs/ja/file1.md help-docs/ja/file2.md
 ```
 
 Dry run (show diff without pushing):
 ```bash
-npx intercom-help-sync push articles/ja/quick-start.md --dry-run
+npx intercom-help-sync push help-docs/ja/quick-start.md --dry-run
 ```
 
 ## Article Format
@@ -157,23 +128,25 @@ author_id: 12345
 3. Link via `translations` field in front matter
 4. Push both files - they'll be synced as one article with translations
 
-## Configuration
+## Configuration (Optional)
 
-`.intercom-config.json` options:
+Configuration file is optional. By default, the tool uses:
+- `INTERCOM_ACCESS_TOKEN` environment variable
+- `help-docs` as the articles directory
+- Default locale is determined from articles (the one with `translations` field)
+- All translations are synced
+
+To customize, create `help-docs/.intercom-config.json`:
 
 ```json
 {
-  "intercomAccessToken": "env:INTERCOM_ACCESS_TOKEN",
-  "articlesDir": "./articles",
-  "defaultLocale": "ja",
-  "supportedLocales": ["ja", "en", "fr"]
+  "articlesDir": "./custom-articles-path"
 }
 ```
 
+Available options:
 - `intercomAccessToken`: Access token (use `env:VAR_NAME` for environment variables)
 - `articlesDir`: Relative path to articles directory
-- `defaultLocale`: Default language code
-- `supportedLocales`: Array of supported language codes
 
 ## Getting Intercom Access Token
 

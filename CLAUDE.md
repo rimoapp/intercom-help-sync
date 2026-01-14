@@ -8,7 +8,6 @@ CLI tool to sync Intercom Help Center articles with local Markdown files.
 
 - `pull` - Pull articles from Intercom and convert HTML to Markdown
 - `push <files...>` - Convert Markdown to HTML and push to Intercom
-- `init` - Initialize directory structure
 
 ## Development
 

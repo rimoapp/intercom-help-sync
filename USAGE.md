@@ -16,26 +16,7 @@ Or with yarn:
 yarn add -D intercom-help-sync
 ```
 
-### 2. Initialize help-docs Directory
-
-```bash
-npx intercom-help-sync init
-```
-
-This creates:
-```
-your-repo/
-├── help-docs/
-│   ├── articles/
-│   │   ├── ja/
-│   │   └── en/
-│   ├── .intercom-config.json
-│   └── README.md
-├── package.json
-└── (other project files)
-```
-
-### 3. Configure Environment
+### 2. Configure Environment
 
 Add to your `.env` file:
 
@@ -49,7 +30,7 @@ Or export in your shell:
 export INTERCOM_ACCESS_TOKEN=your_access_token_here
 ```
 
-### 4. Add Scripts to package.json (Optional)
+### 3. Add Scripts to package.json (Optional)
 
 ```json
 {
@@ -73,7 +54,7 @@ export INTERCOM_ACCESS_TOKEN=your_access_token_here
    ```
 3. Review changes:
    ```bash
-   git diff help-docs/articles/
+   git diff help-docs/
    ```
 4. Commit to version control:
    ```bash
@@ -91,7 +72,7 @@ export INTERCOM_ACCESS_TOKEN=your_access_token_here
    import fs from 'fs/promises';
 
    const article = await fs.readFile(
-     'help-docs/articles/ja/api/authentication.md',
+     'help-docs/ja/api/authentication.md',
      'utf-8'
    );
    ```
@@ -102,14 +83,14 @@ export INTERCOM_ACCESS_TOKEN=your_access_token_here
    const updatedContent = aiGenerateDocumentation(codeChanges, article);
 
    await fs.writeFile(
-     'help-docs/articles/ja/api/authentication.md',
+     'help-docs/ja/api/authentication.md',
      updatedContent
    );
    ```
 
 3. Push changes to Intercom:
    ```bash
-   npm run docs:push -- --file help-docs/articles/ja/api/authentication.md
+   npm run docs:push -- --file help-docs/ja/api/authentication.md
    ```
 
 ### i18n Translation Workflow
@@ -212,19 +193,6 @@ jobs:
 npx intercom-help-sync pull --config path/to/custom-config.json
 ```
 
-### Multiple Locales
-
-Update `.intercom-config.json`:
-
-```json
-{
-  "intercomAccessToken": "env:INTERCOM_ACCESS_TOKEN",
-  "articlesDir": "./articles",
-  "defaultLocale": "ja",
-  "supportedLocales": ["ja", "en", "fr", "de", "es"]
-}
-```
-
 ### Selective Sync
 
 Sync only specific article:
@@ -234,7 +202,7 @@ npx intercom-help-sync pull --article-id 123456
 
 Sync only specific file:
 ```bash
-npx intercom-help-sync push --file help-docs/articles/ja/getting-started/quick-start.md
+npx intercom-help-sync push --file help-docs/ja/getting-started/quick-start.md
 ```
 
 ## Troubleshooting

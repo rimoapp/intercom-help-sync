@@ -27,6 +27,29 @@ export class SyncToIntercom {
   }
 
   /**
+   * Find the default locale article from a list of articles
+   * Priority: 1) article with translations field, 2) config.defaultLocale, 3) first article
+   */
+  private findDefaultArticle(articles: LocalArticle[]): LocalArticle {
+    // Article with translations field is the default locale
+    const withTranslations = articles.find(a => a.frontMatter.translations && Object.keys(a.frontMatter.translations).length > 0);
+    if (withTranslations) {
+      return withTranslations;
+    }
+
+    // Fall back to config.defaultLocale if specified
+    if (this.config.defaultLocale) {
+      const byConfigLocale = articles.find(a => a.frontMatter.locale === this.config.defaultLocale);
+      if (byConfigLocale) {
+        return byConfigLocale;
+      }
+    }
+
+    // Fall back to first article
+    return articles[0];
+  }
+
+  /**
    * Sync all local articles to Intercom
    */
   async syncAll(): Promise<SyncResult> {
@@ -142,10 +165,11 @@ export class SyncToIntercom {
     // Convert markdown to HTML
     const newHtml = markdownToHtml(defaultArticle.content, currentHtml);
 
-    // Process translations
+    // Process translations (articles other than default)
     const translations: DryRunResult['translations'] = [];
+    const defaultLocale = defaultArticle.frontMatter.locale;
     for (const article of articles) {
-      if (article.frontMatter.locale !== this.config.defaultLocale) {
+      if (article.frontMatter.locale !== defaultLocale) {
         const locale = article.frontMatter.locale;
         translations.push({
           locale,
@@ -189,9 +213,7 @@ export class SyncToIntercom {
     }
 
     // Find default locale article
-    const defaultArticle = articles.find(
-      a => a.frontMatter.locale === this.config.defaultLocale
-    ) || articles[0];
+    const defaultArticle = this.findDefaultArticle(articles);
 
     return { articles, defaultArticle };
   }
@@ -204,14 +226,12 @@ export class SyncToIntercom {
     articles: LocalArticle[],
     result: SyncResult
   ): Promise<void> {
-    // Find the default locale article
-    const defaultArticle = articles.find(
-      a => a.frontMatter.locale === this.config.defaultLocale
-    ) || articles[0];
-
-    if (!defaultArticle) {
+    if (articles.length === 0) {
       throw new Error('No articles to sync');
     }
+
+    // Find the default locale article
+    const defaultArticle = this.findDefaultArticle(articles);
 
     // Fetch current article from Intercom to get image signatures
     let originalHtml: string | undefined;
@@ -236,11 +256,12 @@ export class SyncToIntercom {
     // Convert markdown to HTML for default locale
     const defaultBody = markdownToHtml(defaultArticle.content, originalHtml);
 
-    // Prepare translated content
+    // Prepare translated content (articles other than default)
     const translatedContent: IntercomArticle['translated_content'] = {};
+    const defaultLocale = defaultArticle.frontMatter.locale;
 
     for (const article of articles) {
-      if (article.frontMatter.locale !== this.config.defaultLocale) {
+      if (article.frontMatter.locale !== defaultLocale) {
         const locale = article.frontMatter.locale;
         const originalTranslationHtml = originalTranslations[locale];
 

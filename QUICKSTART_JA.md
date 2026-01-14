@@ -28,24 +28,7 @@ cd /path/to/your-project
 npm link intercom-help-sync
 ```
 
-### 3. help-docsディレクトリを初期化
-
-```bash
-npx intercom-help-sync init
-```
-
-これにより以下の構造が作成されます：
-```
-your-project/
-├── help-docs/
-│   ├── articles/
-│   │   ├── ja/
-│   │   └── en/
-│   ├── .intercom-config.json
-│   └── README.md
-```
-
-### 4. Intercomのアクセストークンを設定
+### 3. Intercomのアクセストークンを設定
 
 ```bash
 export INTERCOM_ACCESS_TOKEN=your_access_token_here
@@ -56,7 +39,7 @@ export INTERCOM_ACCESS_TOKEN=your_access_token_here
 INTERCOM_ACCESS_TOKEN=your_access_token_here
 ```
 
-### 5. 記事を同期
+### 4. 記事を同期
 
 **Intercomから取得:**
 ```bash
@@ -157,10 +140,7 @@ npx intercom-help-sync pull --article-id 123456
 npx intercom-help-sync push
 
 # 特定のファイルをプッシュ
-npx intercom-help-sync push --file articles/ja/getting-started/quick-start.md
-
-# help-docsディレクトリを初期化
-npx intercom-help-sync init
+npx intercom-help-sync push help-docs/ja/getting-started/quick-start.md
 
 # カスタム設定ファイルを使用
 npx intercom-help-sync pull --config path/to/config.json

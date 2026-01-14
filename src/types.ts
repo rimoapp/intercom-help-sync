@@ -1,8 +1,8 @@
 export interface IntercomConfig {
   intercomAccessToken: string;
   articlesDir: string;
-  defaultLocale: string;
-  supportedLocales: string[];
+  defaultLocale?: string;  // Optional: determined from article.default_locale during sync
+  supportedLocales?: string[];  // Optional: all translations are synced if not specified
 }
 
 export interface ArticleFrontMatter {

@@ -95,7 +95,8 @@ export class SyncFromIntercom {
     // Sync translated content
     if (article.translated_content) {
       for (const [locale, translation] of Object.entries(article.translated_content)) {
-        if (this.config.supportedLocales.includes(locale)) {
+        // Sync all translations, or filter by supportedLocales if specified
+        if (!this.config.supportedLocales || this.config.supportedLocales.includes(locale)) {
           await this.syncArticleLocale(
             article,
             locale,
@@ -152,7 +153,8 @@ export class SyncFromIntercom {
     if (locale === baseArticle.default_locale && baseArticle.translated_content) {
       frontMatter.translations = {};
       for (const translationLocale of Object.keys(baseArticle.translated_content)) {
-        if (this.config.supportedLocales.includes(translationLocale)) {
+        // Include all translations, or filter by supportedLocales if specified
+        if (!this.config.supportedLocales || this.config.supportedLocales.includes(translationLocale)) {
           const translationSlug = baseArticle.translated_content[translationLocale].title
             .toLowerCase()
             .replace(/\s+/g, '-');

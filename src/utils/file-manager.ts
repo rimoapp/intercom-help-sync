@@ -115,21 +115,38 @@ export async function deleteArticle(filePath: string): Promise<void> {
 }
 
 /**
- * Load configuration from .intercom-config.json
+ * Load configuration from .intercom-config.json or use defaults
+ * @param configPath - Path to config file (optional - returns defaults if file doesn't exist)
+ * @param basePath - Base path for resolving articlesDir (used when config file doesn't exist)
  */
-export async function loadConfig(configPath: string): Promise<IntercomConfig> {
-  const content = await fs.readFile(configPath, 'utf-8');
-  const config = JSON.parse(content) as IntercomConfig;
+export async function loadConfig(configPath?: string, basePath?: string): Promise<IntercomConfig> {
+  let config: Partial<IntercomConfig> = {};
+
+  // Try to load config file if path provided
+  if (configPath && await exists(configPath)) {
+    const content = await fs.readFile(configPath, 'utf-8');
+    config = JSON.parse(content) as Partial<IntercomConfig>;
+  }
+
+  // Apply defaults
+  const defaultArticlesDir = basePath || path.join(process.cwd(), 'help-docs');
+
+  const finalConfig: IntercomConfig = {
+    intercomAccessToken: config.intercomAccessToken || 'env:INTERCOM_ACCESS_TOKEN',
+    articlesDir: config.articlesDir || defaultArticlesDir,
+    defaultLocale: config.defaultLocale,
+    supportedLocales: config.supportedLocales,
+  };
 
   // Replace env: prefix with actual environment variable
-  if (config.intercomAccessToken?.startsWith('env:')) {
-    const envVar = config.intercomAccessToken.slice(4);
-    config.intercomAccessToken = process.env[envVar] || '';
+  if (finalConfig.intercomAccessToken.startsWith('env:')) {
+    const envVar = finalConfig.intercomAccessToken.slice(4);
+    finalConfig.intercomAccessToken = process.env[envVar] || '';
 
-    if (!config.intercomAccessToken) {
+    if (!finalConfig.intercomAccessToken) {
       throw new Error(`Environment variable ${envVar} is not set. Set it with: export ${envVar}=your_token`);
     }
   }
 
-  return config;
+  return finalConfig;
 }
