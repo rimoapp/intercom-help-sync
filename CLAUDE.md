@@ -28,7 +28,7 @@ node /path/to/intercom-help-sync/dist/cli.js pull
 
 ## Releasing
 
-Use `npm version` to bump version, then push with tags and create a GitHub release:
+Use `npm version` to bump version, then push with tags, create a GitHub release, and publish to npm:
 
 ```bash
 # 1. Bump version (creates commit + tag automatically)
@@ -47,4 +47,7 @@ gh release create v0.4.0 --title "v0.4.0" --notes "## Changes
 
 # Or auto-generate notes from commits
 gh release create v0.4.0 --generate-notes
+
+# 4. Publish to npm
+npm publish
 ```
