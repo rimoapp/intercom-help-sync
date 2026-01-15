@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { IntercomArticle, IntercomArticlesResponse } from '../types';
+import { IntercomArticle, IntercomArticlesResponse, IntercomCollection, IntercomCollectionsResponse } from '../types';
 
 export class IntercomClient {
   private client: AxiosInstance;
@@ -42,6 +42,34 @@ export class IntercomClient {
     }
 
     return articles;
+  }
+
+  /**
+   * Fetch all collections from Intercom Help Center
+   */
+  async getAllCollections(): Promise<IntercomCollection[]> {
+    const collections: IntercomCollection[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore) {
+      const response = await this.client.get<IntercomCollectionsResponse>(
+        '/help_center/collections',
+        {
+          params: {
+            page,
+            per_page: 50,
+          },
+        }
+      );
+
+      collections.push(...response.data.data);
+
+      hasMore = page < response.data.pages.total_pages;
+      page++;
+    }
+
+    return collections;
   }
 
   /**

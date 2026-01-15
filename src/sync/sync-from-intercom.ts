@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { IntercomClient } from './intercom-client';
-import { IntercomConfig, IntercomArticle, SyncResult, ArticleFrontMatter } from '../types';
+import { IntercomConfig, IntercomArticle, IntercomCollection, SyncResult, ArticleFrontMatter } from '../types';
 import { writeArticle, findArticleByIntercomId, deleteArticle } from '../utils/file-manager';
 import { generateFilePath, timestampToISO } from '../utils/markdown';
 import { htmlToMarkdown } from '../utils/html-to-markdown';
@@ -8,10 +8,35 @@ import { htmlToMarkdown } from '../utils/html-to-markdown';
 export class SyncFromIntercom {
   private client: IntercomClient;
   private config: IntercomConfig;
+  private collectionMap: Map<string, string> = new Map(); // id -> name
 
   constructor(config: IntercomConfig) {
     this.config = config;
     this.client = new IntercomClient(config.intercomAccessToken);
+  }
+
+  /**
+   * Load collections and build a map from ID to name
+   */
+  private async loadCollections(): Promise<void> {
+    const collections = await this.client.getAllCollections();
+    for (const collection of collections) {
+      // Use slug-friendly version of the name
+      const slugName = collection.name
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '') // Remove special characters except hyphens
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-') // Replace multiple hyphens with single
+        .trim();
+      this.collectionMap.set(collection.id, slugName || collection.id);
+    }
+  }
+
+  /**
+   * Get collection name by ID, falling back to ID if not found
+   */
+  private getCollectionName(collectionId: string): string {
+    return this.collectionMap.get(collectionId) || collectionId;
   }
 
   /**
@@ -27,6 +52,9 @@ export class SyncFromIntercom {
     };
 
     try {
+      // Load collections first for name mapping
+      await this.loadCollections();
+
       const articles = await this.client.getAllArticles();
 
       for (const article of articles) {
@@ -62,6 +90,9 @@ export class SyncFromIntercom {
     };
 
     try {
+      // Load collections first for name mapping
+      await this.loadCollections();
+
       const article = await this.client.getArticle(articleId);
       await this.syncArticle(article, result);
     } catch (error) {
@@ -131,13 +162,16 @@ export class SyncFromIntercom {
       article.id
     );
 
-    // Generate file path
+    // Generate file path using collection name for folder
     const collectionId = article.parent_id || 'uncategorized';
+    const collectionName = collectionId === 'uncategorized'
+      ? 'uncategorized'
+      : this.getCollectionName(collectionId);
     // Use title for slug, or fallback to article ID if title is empty
     const slug = title
       ? title.replace(/\s+/g, '-')
       : `article-${article.id}`;
-    const relativePath = generateFilePath(locale, collectionId, slug);
+    const relativePath = generateFilePath(locale, collectionName, slug);
     const filePath = path.join(this.config.articlesDir, relativePath);
 
     // Delete old file if title changed (different path)
@@ -145,7 +179,7 @@ export class SyncFromIntercom {
       await deleteArticle(existingFile);
     }
 
-    // Prepare front matter
+    // Prepare front matter (keep original collection ID for reference)
     const frontMatter: ArticleFrontMatter = {
       intercom_id: article.id,
       intercom_collection_id: collectionId,
@@ -173,7 +207,7 @@ export class SyncFromIntercom {
             : `article-${baseArticle.id}`;
           frontMatter.translations[translationLocale] = generateFilePath(
             translationLocale,
-            collectionId,
+            collectionName,
             translationSlug
           );
         }

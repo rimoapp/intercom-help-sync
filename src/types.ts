@@ -44,6 +44,39 @@ export interface IntercomArticle {
   };
 }
 
+export interface IntercomCollection {
+  id: string;
+  type: 'collection';
+  workspace_id: string;
+  name: string;
+  description?: string;
+  created_at: number;
+  updated_at: number;
+  url?: string;
+  icon?: string;
+  order?: number;
+  default_locale: string;
+  translated_content?: {
+    [locale: string]: {
+      type: 'collection_content';
+      name: string;
+      description?: string;
+    };
+  };
+}
+
+export interface IntercomCollectionsResponse {
+  type: 'list';
+  pages: {
+    type: 'pages';
+    page: number;
+    per_page: number;
+    total_pages: number;
+  };
+  total_count: number;
+  data: IntercomCollection[];
+}
+
 export interface IntercomArticlesResponse {
   type: 'list';
   pages: {
