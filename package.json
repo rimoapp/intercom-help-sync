@@ -27,12 +27,12 @@
   "author": "Rimo",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/rimoapp/intercom-help-sync.git"
+    "url": "git+https://github.com/rimo/intercom-help-sync.git"
   },
   "bugs": {
-    "url": "https://github.com/rimoapp/intercom-help-sync/issues"
+    "url": "https://github.com/rimo/intercom-help-sync/issues"
   },
-  "homepage": "https://github.com/rimoapp/intercom-help-sync#readme",
+  "homepage": "https://github.com/rimo/intercom-help-sync#readme",
   "license": "MIT",
   "dependencies": {
     "commander": "^11.1.0",
